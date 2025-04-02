@@ -17,7 +17,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 db_url = "postgresql+psycopg://ai:ai@localhost:5532/ai"
 
 
-def get_auto_rag_agent(model_id: str = "gpt-4o-mini", user_id: Optional[str] = None, session_id: Optional[str] = None, debug_mode: bool = True) -> Agent:
+def get_rag_agent(model_id: str = "gpt-4o-mini", user_id: Optional[str] = None, session_id: Optional[str] = None, debug_mode: bool = True) -> Agent:
     """Get an Auto RAG Agent with Memory."""
 
     # Define persistent memory for chat history
@@ -37,7 +37,7 @@ def get_auto_rag_agent(model_id: str = "gpt-4o-mini", user_id: Optional[str] = N
     )
 
     # Create the Agent
-    auto_rag_agent: Agent = Agent(
+    rag_agent: Agent = Agent(
         name="auto_rag_agent",
         session_id=session_id,  # Track session ID for persistent conversations
         user_id=user_id,
@@ -64,7 +64,7 @@ def get_auto_rag_agent(model_id: str = "gpt-4o-mini", user_id: Optional[str] = N
         show_tool_calls=True,
     )
 
-    return auto_rag_agent
+    return rag_agent
 
 '''
 if __name__ == "__main__":

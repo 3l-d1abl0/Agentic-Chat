@@ -6,12 +6,12 @@ from agno.utils.log import logger
 from agno.knowledge.pdf import PDFReader
 from agno.knowledge.text import TextReader
 from agno.knowledge.csv import CSVReader
-from agno_agent import get_auto_rag_agent
+from agno_agent import get_rag_agent
 from typing import List
 from agno.document import Document
 from agno.document.reader.website_reader import WebsiteReader
 
-model_id ="gpt-3.5-turbo"
+
 
 def check_postgres_connection():
     try:
@@ -54,6 +54,24 @@ def get_file_reader(file_type: str):
     readers = { "pdf": PDFReader(), "csv": CSVReader(), "txt": TextReader() }
     return readers.get(file_type.lower(), None)
 
+def sidebar_model_options():
+    model_options = {
+        "o3-mini": "openai:o3-mini",
+        "o3-mini": "openai:gpt-3.5-turbo",
+        "gpt-4o": "openai:gpt-4o",
+        "gpt-4-turbo": "openai:gpt-4-turbo"
+    }
+    selected_model = st.sidebar.selectbox(
+        "Select a model",
+        options=list(model_options.keys()),
+        index=0,
+        key="model_selector",
+    )
+    if st.session_state.get("model_id") != selected_model:
+        st.session_state["model_id"] = selected_model
+
+    return selected_model
+
 def sidebar_knowledge_base(rag_agent):
     uploaded_file = st.sidebar.file_uploader("Add a Document (.pdf, .csv, or .txt)", key="file_upload")
     if uploaded_file:
@@ -67,18 +85,24 @@ def sidebar_knowledge_base_url(rag_agent):
     
     if "loaded_urls" not in st.session_state:
         st.session_state.loaded_urls = set()
+
+    if "loaded_urls" not in st.session_state:
+        st.session_state.loaded_urls = set()
     
     input_url = st.sidebar.text_input("Add URL to Knowledge Base")
-    if input_url:  
+    if input_url not in st.session_state.loaded_urls:
         alert = st.sidebar.info("Processing URLs...", icon="ℹ️")
         scraper = WebsiteReader(max_links=2, max_depth=1)
         docs: List[Document] = scraper.read(input_url)
         if docs:
             rag_agent.knowledge.load_documents(docs, upsert=True)
+            st.session_state.loaded_urls.add(input_url)
             st.sidebar.success("URL added to knowledge base")
         else:
             st.sidebar.error("Could not process the provided URL")
         alert.empty()
+    else:
+        st.sidebar.info("URL already loaded in knowledge base")
 
 def sidebar_session_history(rag_agent):
     # Session Management
@@ -86,13 +110,13 @@ def sidebar_session_history(rag_agent):
         session_ids =rag_agent.storage.get_all_session_ids()
         new_session_id = st.sidebar.selectbox("Session ID", options=session_ids)  # type: ignore
         if new_session_id != st.session_state.get("rag_agent_session_id"):
-            st.session_state["rag_agent"] = get_auto_rag_agent(model_id=model_id, session_id=new_session_id)
+            st.session_state["rag_agent"] = get_rag_agent(model_id=model_id, session_id=new_session_id)
             st.session_state["rag_agent_session_id"] = new_session_id
             st.rerun()
 
 def page_setup():
-    st.set_page_config(page_title="Autonomous RAG", page_icon="🐧")
-    st.header('Autonomous RAG')
+    st.set_page_config(page_title="Agentic RAG", page_icon="🐧", layout="wide")
+    st.header('Agentic RAG')
 
     st.sidebar.markdown("Built using [Agno-agi](https://github.com/agno-agi/agno/)")
 
@@ -100,7 +124,7 @@ def initialize_agent(model_id: str):
 
     if "rag_agent" not in st.session_state or st.session_state["rag_agent"] is None:
         logger.info(f"########## Creating {model_id} Agent ##########")
-        agent: Agent = get_auto_rag_agent(
+        agent: Agent = get_rag_agent(
             model_id=model_id, session_id=st.session_state.get("rag_agent_session_id")
         )
         st.session_state["rag_agent"] = agent
@@ -162,7 +186,9 @@ if __name__ == "__main__":
 
     page_setup()
 
+    model_id = sidebar_model_options()
+
     # Initialize the agent
-    rag_agent = initialize_agent("gpt-3.5-turbo")
+    rag_agent = initialize_agent(model_id)
 
     run_app(rag_agent)

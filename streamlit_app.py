@@ -3,6 +3,9 @@ import streamlit as st
 from qdrant_client import QdrantClient
 from agno.agent import Agent
 from agno.utils.log import logger
+from agno.knowledge.pdf import PDFReader
+from agno.knowledge.text import TextReader
+from agno.knowledge.csv import CSVReader
 from agno_agent import get_auto_rag_agent
 
 def check_postgres_connection():
@@ -41,6 +44,23 @@ def check_qdrant_connection():
     except Exception as e:
         print(f"Error connecting to Qdrant DB: {e}")
         return False
+
+def get_file_reader(file_type: str):
+    readers = { "pdf": PDFReader(), "csv": CSVReader(), "txt": TextReader() }
+    return readers.get(file_type.lower(), None)
+
+def sidebar_knowledge_base(rag_agent):
+    uploaded_file = st.sidebar.file_uploader("Add a Document (.pdf, .csv, or .txt)", key="file_upload")
+    if uploaded_file:
+        file_type = uploaded_file.name.split(".")[-1].lower()
+        reader = get_file_reader(file_type)
+        if reader:
+            docs = reader.read(uploaded_file)
+            rag_agent.knowledge.load_documents(docs, upsert=True)
+
+    # if st.sidebar.button("Clear Knowledge Base"):
+    #     rag_agent.knowledge.vector_db.delete()
+    #     st.sidebar.success("Knowledge base cleared")
 
 def page_setup():
     st.set_page_config(page_title="Autonomous RAG", page_icon="🐧")
@@ -90,6 +110,8 @@ def run_app(rag_agent):
             continue
         with st.chat_message(message["role"]):
             st.write(message["content"])
+
+    sidebar_knowledge_base(rag_agent)
 
 
 

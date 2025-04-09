@@ -90,7 +90,7 @@ def sidebar_knowledge_base_url(rag_agent):
         st.session_state.loaded_urls = set()
     
     input_url = st.sidebar.text_input("Add URL to Knowledge Base")
-    if input_url not in st.session_state.loaded_urls:
+    if input_url and input_url not in st.session_state.loaded_urls:
         alert = st.sidebar.info("Processing URLs...", icon="ℹ️")
         scraper = WebsiteReader(max_links=2, max_depth=1)
         docs: List[Document] = scraper.read(input_url)
@@ -102,7 +102,8 @@ def sidebar_knowledge_base_url(rag_agent):
             st.sidebar.error("Could not process the provided URL")
         alert.empty()
     else:
-        st.sidebar.info("URL already loaded in knowledge base")
+        if input_url:
+            st.sidebar.info("URL already loaded in knowledge base")
 
 def sidebar_session_history(rag_agent):
     # Session Management

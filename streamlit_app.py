@@ -108,11 +108,28 @@ def sidebar_knowledge_base_url(rag_agent):
 def sidebar_session_history(rag_agent):
     # Session Management
     if rag_agent.storage:
-        session_ids =rag_agent.storage.get_all_session_ids()
-        new_session_id = st.sidebar.selectbox("Session ID", options=session_ids)  # type: ignore
-        if new_session_id != st.session_state.get("rag_agent_session_id"):
-            st.session_state["rag_agent"] = get_rag_agent(model_id=model_id, session_id=new_session_id)
-            st.session_state["rag_agent_session_id"] = new_session_id
+        
+        stored_sessions = rag_agent.storage.get_all_sessions()
+
+        # Get session names if available, otherwise use IDs
+        session_options = []
+        for session in stored_sessions:
+
+            #print(dir(session))
+
+            session_name = ( session.session_data.get("session_name", None) if session.session_data else None )
+            display_name = session_name if session_name else session.session_id
+            session_options.append({"id": session.session_id, "display": display_name})
+
+        chosen_session = st.sidebar.selectbox("Session ID", options=[opt["display"] for opt in session_options])
+        print(chosen_session)
+        #Find the selected session ID
+        selected_session_id = next(
+            s["id"] for s in session_options if s["display"] == chosen_session
+        )
+        if selected_session_id != st.session_state.get("rag_agent_session_id"):
+            st.session_state["rag_agent"] = get_rag_agent(model_id=model_id, session_id=selected_session_id)
+            st.session_state["rag_agent_session_id"] = selected_session_id
             st.rerun()
 
 def page_setup():

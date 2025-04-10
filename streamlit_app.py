@@ -158,9 +158,14 @@ def run_app(rag_agent):
     if "history" not in st.session_state:
         st.session_state["history"] = []
 
+    print("Memory Runs: ",rag_agent.memory.runs)
+    print("LOAD SESSIONS: ", rag_agent.load_session())
+
     # Load chat history from memory, if Present in memory and not present in state history
+    logger.info(f"########## Loading chat history ##########")
     if rag_agent.memory and not st.session_state["history"]:
         logger.debug("Loading chat history!")
+        logger.debug(rag_agent.memory.messages)
         st.session_state["history"] = [
             {"role": message.role, "content": message.content} for message in rag_agent.memory.messages
         ]
@@ -171,17 +176,23 @@ def run_app(rag_agent):
     # Handle user input and generate responses
     if prompt := st.chat_input("Ask a question:"):
         st.session_state["history"].append({"role": "user", "content": prompt})
-        with st.chat_message("agent"):
+        with st.chat_message("assistant"):
             agent_response = rag_agent.run(prompt)
             print('AGENT RESPONSE: ', agent_response.content)
-            st.session_state["history"].append({"role": "agent", "content": agent_response.content})
+            st.session_state["history"].append({"role": "assistant", "content": agent_response.content})
 
     # Display chat history
     for message in st.session_state["history"]:
-        if message["role"] == "system":
-            continue
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+
+        if message["role"] in ["user", "assistant"]:
+            if message["content"] is not None:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+        # if message["role"] == "system":
+        #     continue
+        # with st.chat_message(message["role"]):
+        #     st.write(message["content"])
 
     sidebar_knowledge_base(rag_agent)
 

@@ -42,7 +42,7 @@ def get_rag_agent(model_id: str = "gpt-4o-mini", user_id: Optional[str] = None, 
         session_id=session_id,  # Track session ID for persistent conversations
         user_id=user_id,
         model=OpenAIChat(id=model_id),
-        storage=PostgresAgentStorage(table_name="auto_rag_agent_sessions", db_url=db_url),  # Persist session data
+        storage=PostgresAgentStorage(table_name="rag_agent_sessions", db_url=db_url),  # Persist session data
         memory=memory,  # Add memory to the agent
         knowledge=knowledge_base,  # Add knowledge base
         description="You are a helpful Agent called 'AutoRAG' and your goal is to assist the user in the best way possible.",

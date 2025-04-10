@@ -1,4 +1,4 @@
-# Autonomous RAG (Retrieval-Augmented Generation)
+# Agentic RAG (Retrieval-Augmented Generation)
 
 A powerful chatbot application built with Streamlit that combines RAG capabilities using Agno-agi framework, PostgreSQL for persistence, and Qdrant for vector storage.
 
@@ -32,13 +32,32 @@ pip install -r requirements.txt
 ```
 
 3. Set up environment variables:
-Create a `.env` file in the project root and add:
-```
-OPENAI_API_KEY=your_openai_api_key_here
+
+   export your apena ai key
+```bash
+export OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 4. Configure database connections:
-- PostgreSQL should be running on `localhost:5532` with database `ai` and user/password as `ai/ai` (Customize a per you need)
+
+- Setup your pgVector Database, for example: 
+```bash
+docker run -d \
+  -e POSTGRES_DB=ai \
+  -e POSTGRES_USER=ai \
+  -e POSTGRES_PASSWORD=ai \
+  -e PGDATA=/var/lib/postgresql/data/pgdata \
+  -v pgvolume:/var/lib/postgresql/data \
+  -p 5532:5432 \
+  --name pgvector \
+  phidata/pgvector:16
+```
+- As per above config PostgreSQL should be running on `localhost:5532` with database `ai` and user/password as `ai/ai` (Customize a per you need)
+
+- Setup your Qdrant db, for example:
+```bash
+docker run -d -p 6333:6333 --name qdrantdb qdrant/qdrant
+```
 - Qdrant should be running on `localhost:6333`
 
 ## Usage
@@ -79,20 +98,4 @@ streamlit run streamlit_app.py --server.headless true
 - Web search capabilities
 - Knowledge base integration
 
-## Environment Setup
 
-Required services:
-1. PostgreSQL:
-   - Host: localhost
-   - Port: 5532
-   - Database: ai
-   - Username: ai
-   - Password: ai
-
-2. Qdrant:
-   - Host: localhost
-   - Port: 6333
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.

@@ -122,7 +122,7 @@ def sidebar_session_history(rag_agent):
             session_options.append({"id": session.session_id, "display": display_name})
 
         chosen_session = st.sidebar.selectbox("Session ID", options=[opt["display"] for opt in session_options])
-        print(chosen_session)
+        print("chosen_session: ",chosen_session)
         #Find the selected session ID
         selected_session_id = next(
             s["id"] for s in session_options if s["display"] == chosen_session
@@ -130,6 +130,7 @@ def sidebar_session_history(rag_agent):
         if selected_session_id != st.session_state.get("rag_agent_session_id"):
             st.session_state["rag_agent"] = get_rag_agent(model_id=model_id, session_id=selected_session_id)
             st.session_state["rag_agent_session_id"] = selected_session_id
+            st.session_state["history"]=[]
             st.rerun()
 
 def page_setup():
@@ -158,14 +159,14 @@ def run_app(rag_agent):
     if "history" not in st.session_state:
         st.session_state["history"] = []
 
-    print("Memory Runs: ",rag_agent.memory.runs)
+    #print("Memory Runs: ",rag_agent.memory.runs)
     print("LOAD SESSIONS: ", rag_agent.load_session())
 
     # Load chat history from memory, if Present in memory and not present in state history
     logger.info(f"########## Loading chat history ##########")
     if rag_agent.memory and not st.session_state["history"]:
         logger.debug("Loading chat history!")
-        logger.debug(rag_agent.memory.messages)
+        #logger.debug(rag_agent.memory.messages)
         st.session_state["history"] = [
             {"role": message.role, "content": message.content} for message in rag_agent.memory.messages
         ]
